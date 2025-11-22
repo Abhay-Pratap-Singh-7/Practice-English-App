@@ -1,0 +1,7 @@
+{
+  "name": "LinguaFlow AI",
+  "description": "A futuristic, voice-first English practice application powered by Gemini Live API.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
