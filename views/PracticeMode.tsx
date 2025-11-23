@@ -7,6 +7,7 @@ import GlassCard from '../components/GlassCard';
 import { ArrowLeft, Mic, MicOff, Volume2, Activity, Award, Clock, Home, Zap, TrendingUp, TrendingDown } from 'lucide-react';
 import { createPcmBlob, decodeAudioData, decodeBase64 } from '../utils/audioUtils';
 import { historyService } from '../utils/historyService';
+import { vocabService } from '../utils/vocabService';
 
 interface Props {
   setView: (view: AppView) => void;
@@ -293,6 +294,9 @@ const PracticeMode: React.FC<Props> = ({ setView }) => {
 
     setIsAnalyzing(true);
     setShowResult(true);
+
+    // Trigger Vocab Mining Async
+    vocabService.mineFromTranscript(fullTranscriptRef.current);
 
     try {
         const ai = new GoogleGenAI({ apiKey });

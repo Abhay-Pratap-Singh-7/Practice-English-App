@@ -8,6 +8,7 @@ import { topicService, INTERESTS_LIST } from '../utils/topicService';
 import { GoogleGenAI, LiveServerMessage, Modality, Type } from '@google/genai';
 import { createPcmBlob, decodeAudioData, decodeBase64 } from '../utils/audioUtils';
 import { historyService } from '../utils/historyService';
+import { vocabService } from '../utils/vocabService';
 
 interface Props {
   setView: (view: AppView) => void;
@@ -329,6 +330,9 @@ OUTPUT FORMAT:
 
     setIsAnalyzing(true);
     setShowResult(true);
+
+    // Trigger Vocab Mining Async
+    vocabService.mineFromTranscript(fullTranscriptRef.current);
 
     try {
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });

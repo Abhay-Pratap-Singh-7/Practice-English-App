@@ -1,4 +1,5 @@
-import { Blob } from '@google/genai';
+
+import { Blob as GenAIBlob } from '@google/genai';
 
 // Utility to decode base64 string to byte array
 export function decodeBase64(base64: string): Uint8Array {
@@ -19,6 +20,21 @@ export function encodeBase64(bytes: Uint8Array): string {
     binary += String.fromCharCode(bytes[i]);
   }
   return btoa(binary);
+}
+
+// Utility to convert Blob to Base64 string (for Gemini GenerateContent)
+export function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result as string;
+      // Remove data url prefix (e.g. "data:audio/wav;base64,")
+      const base64 = result.split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
 }
 
 // Decodes raw PCM data into an AudioBuffer
@@ -43,7 +59,7 @@ export async function decodeAudioData(
 }
 
 // Create a Blob suitable for Gemini Live API input from Float32Array (mic input)
-export function createPcmBlob(data: Float32Array): Blob {
+export function createPcmBlob(data: Float32Array): GenAIBlob {
   const l = data.length;
   const int16 = new Int16Array(l);
   for (let i = 0; i < l; i++) {

@@ -73,6 +73,34 @@ export class HistoryService {
       sessionsCompleted: history.length
     };
   }
+
+  // Returns array of minutes practiced for the last 7 days (today is index 6)
+  getWeeklyActivity(): number[] {
+    const history = this.getHistory();
+    const activity = new Array(7).fill(0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    history.forEach(session => {
+        const sessionDate = new Date(session.date);
+        const sessionDayStart = new Date(sessionDate);
+        sessionDayStart.setHours(0, 0, 0, 0);
+
+        const diffTime = Math.abs(today.getTime() - sessionDayStart.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+
+        // If within last 6 days (0 to 6)
+        if (diffDays < 7) {
+            // Map to array index: Today is 6, Yesterday is 5, etc.
+            const index = 6 - diffDays;
+            if (index >= 0 && index < 7) {
+                activity[index] += Math.round(session.durationSeconds / 60);
+            }
+        }
+    });
+
+    return activity;
+  }
 }
 
 export const historyService = new HistoryService();
