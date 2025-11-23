@@ -18,7 +18,7 @@ const GlassCard: React.FC<Props> = ({ children, className = '', onClick }) => {
         shadow-lg 
         transition-all 
         duration-300 
-        ${onClick ? 'cursor-pointer hover:bg-white/10 hover:scale-[1.02] active:scale-95' : ''}
+        ${onClick ? 'cursor-pointer hover:bg-white/10' : ''}
         ${className}
       `}
     >

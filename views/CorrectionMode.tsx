@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI, Type, LiveServerMessage, Modality } from '@google/genai';
 import { AppView, GrammarCorrection } from '../types';
@@ -16,20 +17,26 @@ const CorrectionMode: React.FC<Props> = ({ setView }) => {
   const [result, setResult] = useState<GrammarCorrection | null>(null);
   const [isListening, setIsListening] = useState(false);
 
-  // Refs for audio handling (integrated from PracticeMode logic)
+  // Refs for audio handling
   const recognitionRef = useRef<{ stop: () => void } | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const processorRef = useRef<ScriptProcessorNode | null>(null);
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
   const sessionRef = useRef<Promise<any> | null>(null);
   const initialTextRef = useRef<string>('');
+  const micButtonRef = useRef<HTMLButtonElement | null>(null);
+  const animationFrameRef = useRef<number>(0);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (isListening) {
         recognitionRef.current?.stop();
+      }
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
       }
     };
   }, [isListening]);
@@ -38,6 +45,11 @@ const CorrectionMode: React.FC<Props> = ({ setView }) => {
     if (isListening) {
       recognitionRef.current?.stop();
       setIsListening(false);
+      // Reset button style
+      if (micButtonRef.current) {
+        micButtonRef.current.style.transform = 'scale(1)';
+        micButtonRef.current.style.boxShadow = '';
+      }
     } else {
       setIsListening(true);
       try {
@@ -75,6 +87,12 @@ const CorrectionMode: React.FC<Props> = ({ setView }) => {
           
           const ctx = audioContextRef.current;
           sourceRef.current = ctx.createMediaStreamSource(mediaStreamRef.current);
+          
+          // Analyser for visual feedback
+          analyserRef.current = ctx.createAnalyser();
+          analyserRef.current.fftSize = 64;
+          analyserRef.current.smoothingTimeConstant = 0.5;
+          
           processorRef.current = ctx.createScriptProcessor(4096, 1, 1);
 
           processorRef.current.onaudioprocess = (e) => {
@@ -86,8 +104,33 @@ const CorrectionMode: React.FC<Props> = ({ setView }) => {
             });
           };
 
-          sourceRef.current.connect(processorRef.current);
+          sourceRef.current.connect(analyserRef.current);
+          analyserRef.current.connect(processorRef.current);
           processorRef.current.connect(ctx.destination);
+
+          // Start Animation Loop for Mic Button
+          const animateMic = () => {
+            if (analyserRef.current && micButtonRef.current) {
+              const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
+              analyserRef.current.getByteFrequencyData(dataArray);
+              
+              let sum = 0;
+              for(let i = 0; i < dataArray.length; i++) sum += dataArray[i];
+              const average = sum / dataArray.length;
+              
+              // Dynamic Scale based on volume (1.0 to 1.3)
+              const scale = 1 + (average / 255) * 0.4;
+              
+              // Dynamic Shadow
+              const shadowSpread = (average / 255) * 15;
+              const shadowColor = `rgba(239, 68, 68, ${0.3 + (average/255)*0.5})`; // Red with dynamic opacity
+              
+              micButtonRef.current.style.transform = `scale(${scale})`;
+              micButtonRef.current.style.boxShadow = `0 0 0 ${shadowSpread}px ${shadowColor}`;
+            }
+            animationFrameRef.current = requestAnimationFrame(animateMic);
+          };
+          animateMic();
         },
         onmessage: (message: LiveServerMessage) => {
           // Handle Transcription
@@ -98,7 +141,6 @@ const CorrectionMode: React.FC<Props> = ({ setView }) => {
               setInputText(initialTextRef.current + (initialTextRef.current ? ' ' : '') + currentSessionTranscript);
             }
           }
-          // Ignore audio output from model
         },
         onclose: () => {
           console.log("Dictation session closed");
@@ -121,6 +163,9 @@ const CorrectionMode: React.FC<Props> = ({ setView }) => {
         if (processorRef.current && audioContextRef.current) {
           processorRef.current.disconnect();
           sourceRef.current?.disconnect();
+        }
+        if (animationFrameRef.current) {
+            cancelAnimationFrame(animationFrameRef.current);
         }
       }
     };
@@ -188,8 +233,9 @@ const CorrectionMode: React.FC<Props> = ({ setView }) => {
            />
            <div className="flex justify-end gap-3 mt-4">
              <button 
+               ref={micButtonRef}
                onClick={toggleListening}
-               className={`p-3 rounded-full transition-all ${isListening ? 'bg-red-500 animate-pulse' : 'bg-white/10 hover:bg-white/20'}`}
+               className={`p-3 rounded-full transition-colors duration-200 ease-out ${isListening ? 'bg-red-500 text-white' : 'bg-white/10 hover:bg-white/20 text-slate-200'}`}
                title={isListening ? "Stop Dictation" : "Start Dictation"}
              >
                {isListening ? <Square size={20} fill="currentColor" /> : <Mic size={20} />}

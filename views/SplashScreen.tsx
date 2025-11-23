@@ -34,9 +34,9 @@ const SplashScreen: React.FC<Props> = ({ setView }) => {
           </div>
         </div>
         <h1 className="text-4xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-cyan-300 via-blue-300 to-purple-300">
-          LinguaFlow
+          Fluentro
         </h1>
-        <p className="text-slate-400 mt-2 text-sm tracking-widest uppercase">AI Language Coach</p>
+        <p className="text-slate-400 mt-2 text-sm tracking-widest uppercase">AI English Coach</p>
       </div>
     </GradientBackground>
   );

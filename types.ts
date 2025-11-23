@@ -6,6 +6,7 @@ export enum AppView {
   CORRECTION = 'CORRECTION',
   ENDLESS = 'ENDLESS',
   SETTINGS = 'SETTINGS',
+  HISTORY = 'HISTORY',
 }
 
 export interface ChatMessage {
@@ -38,4 +39,22 @@ export interface GrammarCorrection {
 export interface UserProfile {
   interests: string[];
   seenTopics: string[];
+}
+
+// History & Scoring Types
+export interface SessionRecord {
+  id: string;
+  date: string; // ISO Timestamp
+  durationSeconds: number;
+  mode: 'PRACTICE' | 'ENDLESS';
+  topic?: string;
+  score: number; // 0-100
+  feedback: string;
+}
+
+export interface UserStats {
+  streakDays: number;
+  totalMinutes: number;
+  averageScore: number;
+  sessionsCompleted: number;
 }

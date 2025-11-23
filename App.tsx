@@ -6,6 +6,7 @@ import Home from './views/Home';
 import PracticeMode from './views/PracticeMode';
 import CorrectionMode from './views/CorrectionMode';
 import EndlessMode from './views/EndlessMode';
+import HistoryScreen from './views/HistoryScreen';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<AppView>(AppView.SPLASH);
@@ -22,6 +23,8 @@ const App: React.FC = () => {
         return <CorrectionMode setView={setCurrentView} />;
       case AppView.ENDLESS:
         return <EndlessMode setView={setCurrentView} />;
+      case AppView.HISTORY:
+        return <HistoryScreen setView={setCurrentView} />;
       default:
         return <Home setView={setCurrentView} />;
     }
